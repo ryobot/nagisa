@@ -1,0 +1,47 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: php-mysql
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: php-mysql
+    spec:
+      containers:
+        - name: php-mysql
+          image: reg.local:5000/common/php-mysql:0.1.c
+          ports:
+            - containerPort: 80
+          env:
+            - name: "MYSQL_DATABASE"
+              value: "nagisa"
+            - name: "MYSQL_USER"
+              value: "root"
+            - name: "MYSQL_PASSWORD"
+              value: "password"
+            - name: "POD_NAMESPACE"
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          volumeMounts:
+          - mountPath: "/mnt"
+            name: pv
+      volumes:
+        - name: pv
+          persistentVolumeClaim:
+            claimName: claim-testapp
+      imagePullSecrets:
+        - name: myregistrykey
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: php-mysql
+spec:
+  ports:
+    - name: php-web
+      port: 80
+  selector:
+    app: php-mysql
